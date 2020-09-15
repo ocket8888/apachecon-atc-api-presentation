@@ -226,50 +226,106 @@ Endpoints should be designed to serve a purpose, not expose some data\footnote{
 \end{frame}
 
 \begin{frame}{Data Model}{Prefer name-based identification}
-\begin{itemize}
-	\item Names often need to be unique anyway
-	\item Much easier to remember
-	\item "N+1" query problem
-\end{itemize}
+	\begin{itemize}
+		\item Names often need to be unique anyway
+		\item Much easier to remember
+		\item "N+1" query problem
+	\end{itemize}
 \end{frame}
 
 \begin{frame}{Data Model}{Reduce harmful reflection}
 Customizable types expose database structure - versioning nightmare
-\begin{block}{How to find out if a server is an Edge-tier cache server}
-	\begin{enumerate}
-		\item<1-> Check its Type
+	\begin{block}{How to find out if a server is an Edge-tier cache server}
 		\begin{enumerate}
-			\item<2-> Look up Type by ID
-			\item<3-> Check if its Type's Name is the type "EDGE"\footnote{This exists by default in new installations/upgrades - but it can be deleted!}
-			\item<4-> Check if its Type's Name matches the pattern \code{\^{}EDGE\_.*}
+			\item<1-> Check its Type
+			\begin{enumerate}
+				\item<2-> Look up Type by ID
+				\item<3-> Check if its Type's Name is the type "EDGE"\footnote{This exists by default in new installations/upgrades - but it can be deleted!}
+				\item<4-> Check if its Type's Name matches the pattern \code{\^{}EDGE\_.*}
+			\end{enumerate}
+			\item<5-> Check its Profile
+			\begin{enumerate}
+				\item<6-> Look up its Profile by ID
+				\item<7-> Check its Profile's Type (same procedure as before - but looking for \code{ATS\_PROFILE})
+				\item<8-> Check if its Profile's Name matches the pattern \code{\^{}EDGE\_.*}
+			\end{enumerate}
 		\end{enumerate}
-		\item<5-> Check its Profile
-		\begin{enumerate}
-			\item<6-> Look up its Profile by ID
-			\item<7-> Check its Profile's Type (same procedure as before - but looking for \code{ATS\_PROFILE})
-			\item<8-> Check if its Profile's Name matches the pattern \code{\^{}EDGE\_.*}
-		\end{enumerate}
-	\end{enumerate}
-\end{block}
+	\end{block}
 \end{frame}
 
 \begin{frame}{Data Model}{Reduce field "abuse"}
 "description" fields regularly house business logic parsed by third-party tools
 \end{frame}
 
-\section{Considerations}
-\begin{frame}{Considerations}{...and learned lessons}
-\begin{itemize}
-	\item Breaking changes - e.g. \code{201 Created} considered a failure
-	\item Satisfy use cases - e.g. tags to help with reflection and field abuse
-	\item Introduce changes in small chunks
-	\item Knowing a thing is bad isn't enough to get rid of it - like \code{ANY\_MAP}
-\end{itemize}
+\section{Considerations and Learned Lessons}
+\begin{frame}{Considerations and Learned Lessons}{Breaking changes}
+Things you might not think are breaking can be breaking
+
+	\begin{itemize}
+		\item<2-> \code{201 Created} considered a failure
+	\end{itemize}
+
+\end{frame}
+
+\begin{frame}{Considerations and Learned Lessons}{Satisfy use cases}
+It's not enough to prevent bad behavior - why it was being done must be
+considered
+
+	\begin{itemize}
+		\item<2-> Tags could alleviate the need for reflection and can replace some field abuse.
+		\item<3-> Profiles express powerful configuration options
+	\end{itemize}
+\end{frame}
+
+\begin{frame}{Considerations and Learned Lessons}{Introduce changes in small chunks}
+Changes to the API must be small enough to digest - needs to be broken up into
+the smallest actionable chunks possible
+
+	\begin{overprint}
+		\onslide<2>
+			\begin{block}{Breaking up servers into various types}
+				\begin{itemize}
+					\item Cache servers
+					\item Database servers
+					\item Infrastructure servers
+					\item Traffic Monitors
+					\item Traffic Ops servers
+					\item Traffic Portals
+					\item Traffic Routers
+					\item Traffic Stats servers
+					\item Traffic Vaults
+				\end{itemize}
+			\end{block}
+		\onslide<3>
+			\begin{block}{Changing Delivery Services}
+				\begin{itemize}
+					\item Change "Active" from boolean to enumerated string constants
+					\item Rename XMLID
+				\end{itemize}
+			\end{block}
+	\end{overprint}
+\end{frame}
+
+\begin{frame}{Considerations and Learned Lessons}{What it takes to get rid of bad things}
+Knowing something is bad isn't enough to get rid of it. Some things just can't
+really be changed, because there's no way to encompass all of their use-cases.
+
+	\begin{itemize}
+		\item<2-> \code{ANY\_MAP}
+	\end{itemize}
+\end{frame}
+
+\begin{frame}{Considerations and Learned Lessons}{Shims happen}
+Sometimes doing something better means adding a shim
+
+	\begin{itemize}
+		\item<2-> The \code{ALL} CDN
+	\end{itemize}
 \end{frame}
 
 {\1
 \begin{frame}[plain,noframenumbering]
-	\finalpage{Thank you for listening}
+	\finalpage{Thank you for listening\\\small{\chref{https://github.com/ocket8888/apachecon-atc-api-presentation}{Source code available on GitHub}}}
 \end{frame}}
 
 \end{document}
