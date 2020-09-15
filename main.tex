@@ -1,0 +1,275 @@
+\documentclass[10pt]{beamer}
+\usetheme[
+%%% option passed to the outer theme
+%    progressstyle=fixedCircCnt,   % fixedCircCnt, movingCircCnt (moving is deault)
+]{Feather}
+
+% If you want to change the colors of the various elements in the theme, edit and uncomment the following lines
+
+% Change the bar colors:
+%\setbeamercolor{Feather}{fg=red!20,bg=red}
+
+% Change the color of the structural elements:
+%\setbeamercolor{structure}{fg=red}
+
+% Change the frame title text color:
+%\setbeamercolor{frametitle}{fg=blue}
+
+% Change the normal text color background:
+%\setbeamercolor{normal text}{fg=black,bg=gray!10}
+
+\usepackage[utf8]{inputenc}
+\usepackage[english]{babel}
+\usepackage[T1]{fontenc}
+\usepackage{helvet}
+\usepackage{xcolor}
+\usepackage[newfloat]{minted}
+
+\definecolor{inlinecodecolor}{HTML}{800000}
+\newcommand{\code}[1]{\texorpdfstring{\texttt{\color{inlinecodecolor}#1}}{#1}}
+
+% colored hyperlinks
+\newcommand{\chref}[2]{
+	\href{#1}{{\usebeamercolor[bg]{Feather}#2}}
+}
+
+\title[Traffic Ops API Design] % [] is optional - is placed on the bottom of the sidebar on every slide
+{ % is placed on the title page
+			\textbf{Traffic Ops API Design}
+}
+
+\subtitle[]
+{
+			\textbf{v. 1.0.0}
+}
+
+\author[ocket8888]
+{
+	ocket8888 \\
+	{\ttfamily ocket8888@apache.org}
+}
+
+\date{\today}
+
+%-------------------------------------------------------
+% THE BODY OF THE PRESENTATION
+%-------------------------------------------------------
+
+\begin{document}
+
+\defverbatim[colored]\exampleDSFullPost{
+\begin{minted}[tabsize=2]{json}
+{
+	"xmlId": "demo1",
+	"displayName": "demo1",
+	"longDescription": "some extremely long string",
+	"rawRemapText": "something that could break the CDN",
+	"consistentHashQueryParams": ["xxx", "yyy", "zzz"]
+}
+\end{minted}
+}
+
+\defverbatim[colored]\exampleDSPatch{
+\begin{minted}[tabsize=2]{json}
+{
+	"consistentHashQueryParams": ["test", "quest"]
+}
+\end{minted}
+}
+
+\defverbatim[colored]\urlkeysGenResponse{
+\begin{minted}[tabsize=2]{json}
+{
+	"response": "Successfully generated and stored keys"
+}
+\end{minted}
+}
+
+\defverbatim[colored]\urlkeysNewResponse{
+\begin{minted}[tabsize=2]{json}
+{ "alerts": [{
+	"level": "success",
+	"text": "Successfully generated and stored keys"
+}],
+"response": {
+	"key6":"JhGdpw5X9o8TqHfgezCm0bqb9SQPASWL",
+	"key0":"D4AYzJ1AE2nYisA9MxMtY03TPDCHji9C",
+	"key3":"W90YHlGc_kYlYw5_I0LrkpV9JOzSIneI",
+	"key2":"0qgEoDO7sUsugIQemZbwmMt0tNCwB1sf",
+	"key4":"aFJ2Gb7atmxVB8uv7T9S6OaDml3ycpGf",
+	"key1":"wnWNR1mCz1O4C7EFPtcqHd0xUMQyNFhA",
+	"key5":"SIwv3GOhWN7EE9wSwPFj18qE4M07sFxN"
+}}
+\end{minted}
+}
+
+%-------------------------------------------------------
+% THE TITLEPAGE
+%-------------------------------------------------------
+
+{\1% % this is the name of the PDF file for the background
+\begin{frame}[plain,noframenumbering] % the plain option removes the header from the title page, noframenumbering removes the numbering of this frame only
+	\titlepage % call the title page information from above
+\end{frame}}
+
+
+\begin{frame}{Content}{}
+\tableofcontents
+\end{frame}
+
+%-------------------------------------------------------
+\section{Introduction}
+%-------------------------------------------------------
+\subsection{Anatomy of a meeting}
+\begin{frame}{Introduction}{Anatomy of a meeting}
+%-------------------------------------------------------
+
+	\begin{itemize}
+		\item Roughly 20 meetings
+		\item Consistent attendance from about 4 people
+		\item 1 hour duration
+		\item Living document as a \chref{https://github.com/ocket8888/trafficcontrol/pull/14}{pull request}
+		\item Two merged \chref{https://github.com/apache/trafficcontrol/tree/master/blueprints}{"blueprints"}
+	\end{itemize}
+\end{frame}
+
+%-------------------------------------------------------
+\section{Motivations}
+\begin{frame}{Motivations}{}
+%-------------------------------------------------------
+	There are two main concerns addressed in the API document/meetings:
+	\pause
+	\begin{block}{API Best Practices}
+	\begin{itemize}
+		\item Proper use of HTTP request methods
+		\item Clarification of status codes and their purposes
+		\item No more relationships-as-objects or "join table endpoints"
+		\item Difference between "alerts" and a response
+	\end{itemize}
+	\end{block}
+
+	\begin{block}{Data Model}
+	\begin{itemize}
+		\item Separation between database and API
+		\item Prefer name-based identification
+		\item Reduce harmful reflection
+		\item Reduce field "abuse"
+	\end{itemize}
+	\end{block}
+\end{frame}
+
+
+%-------------------------------------------------------
+\subsection{API Best Practices}
+\begin{frame}{API Best Practices}{Proper use of HTTP request methods}
+%-------------------------------------------------------
+	Request methods should be indicative of the action being performed - i.e. no
+	more endpoints like \chref{https://traffic-control-cdn.readthedocs.io/en/latest/api/v1/deliveryservices\_xmlid\_xmlid\_sslkeys\_delete.html}{\code{GET /deliveryservices/xmlId/\{\{xmlID\}\}/sslkeys/delete}}.\\
+	\code{GET} must \emph{never} modify API objects in any way.\\
+	Recommend \code{PATCH} support - objects can be huge.
+	\begin{overprint}
+		\onslide<1>
+		\begin{block}{Example \code{PUT} request for updating a Delivery Service}
+			\exampleDSFullPost{}
+		\end{block}
+		\onslide<2>
+		\begin{block}{Example \code{PATCH} request to update one field of a Delivery Service}
+			\exampleDSPatch{}
+		\end{block}
+	\end{overprint}
+\end{frame}
+
+%-------------------------------------------------------
+\begin{frame}{API Best Practices}{Clarification of status codes and their purposes}
+%-------------------------------------------------------
+	\begin{itemize}
+		\item<1-> Use \code{403 Forbidden} for out-of-Tenant access, not \code{404 Not Found}
+		\item<2-> Always use \code{500 Internal Server Error} to hide error details from clients
+		\item<3-> \code{201 Created} for object creation
+	\end{itemize}
+\end{frame}
+
+\begin{frame}{API Best Practices}{No more relationships-as-objects or "join table endpoints"}
+	If an object contains a set, map, or list of other objects, they should be
+	properties of that parent object - \emph{not} manipulated by a separate
+	endpoint.
+	\begin{itemize}
+		\item<2-> \chref{https://traffic-control-cdn.readthedocs.io/en/latest/api/v1/servers\_id\_deliveryservices.html}{\code{/servers/\{\{ID\}\}/deliveryservices}}
+		\item<3-> \chref{https://traffic-control-cdn.readthedocs.io/en/latest/api/v1/deliveryservices\_id\_servers.html}{\code{/deliveryservices/\{\{ID\}\}/servers}}
+		\item<4-> \chref{https://traffic-control-cdn.readthedocs.io/en/latest/api/v1/deliveryservices\_xmlid\_servers.html}{\code{/deliveryservices/\{\{xmlID\}\}/servers}}
+		\item<5-> \chref{https://traffic-control-cdn.readthedocs.io/en/latest/api/v1/deliveryservice\_server\_dsid\_serverid.html}{\code{/deliveryservice\_server/\{\{DSID\}\}/\{\{serverID\}\}}}
+		\item<6-> \chref{https://traffic-control-cdn.readthedocs.io/en/latest/api/v1/deliveryserviceserver.html}{\code{/deliveryserviceserver}}
+		\item<7-> \chref{https://traffic-control-cdn.readthedocs.io/en/latest/api/v1/deliveryservices_id_servers_eligible.html}{\code{/deliveryservices/\{\{ID\}\}/servers/eligible}}
+	\end{itemize}
+\end{frame}
+
+\begin{frame}{API Best Practices}{Difference between "alerts" and a response}
+	\begin{overprint}
+		\onslide<1>
+			\begin{block}{API v1 response to URL key generation endpoint}
+				\urlkeysGenResponse{}
+			\end{block}
+		\onslide<2>
+			\begin{block}{Response conforming to API guidelines}
+				\urlkeysNewResponse{}
+			\end{block}
+	\end{overprint}
+\end{frame}
+
+\subsection{Data Model}
+\begin{frame}{Data Model}{Separation between database and API}
+Exposing database tables directly inevitably leads to guidelines violations and
+an overall more fragile design.\\
+Endpoints should be designed to serve a purpose, not expose some data\footnote{
+	Although that could be the purpose.
+}.
+\end{frame}
+
+\begin{frame}{Data Model}{Prefer name-based identification}
+\begin{itemize}
+	\item Names often need to be unique anyway
+	\item Much easier to remember
+	\item "N+1" query problem
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Data Model}{Reduce harmful reflection}
+Customizable types expose database structure - versioning nightmare
+\begin{block}{How to find out if a server is an Edge-tier cache server}
+	\begin{enumerate}
+		\item<1-> Check its Type
+		\begin{enumerate}
+			\item<2-> Look up Type by ID
+			\item<3-> Check if its Type's Name is the type "EDGE"\footnote{This exists by default in new installations/upgrades - but it can be deleted!}
+			\item<4-> Check if its Type's Name matches the pattern \code{\^{}EDGE\_.*}
+		\end{enumerate}
+		\item<5-> Check its Profile
+		\begin{enumerate}
+			\item<6-> Look up its Profile by ID
+			\item<7-> Check its Profile's Type (same procedure as before - but looking for \code{ATS\_PROFILE})
+			\item<8-> Check if its Profile's Name matches the pattern \code{\^{}EDGE\_.*}
+		\end{enumerate}
+	\end{enumerate}
+\end{block}
+\end{frame}
+
+\begin{frame}{Data Model}{Reduce field "abuse"}
+"description" fields regularly house business logic parsed by third-party tools
+\end{frame}
+
+\section{Considerations}
+\begin{frame}{Considerations}{...and learned lessons}
+\begin{itemize}
+	\item Breaking changes - e.g. \code{201 Created} considered a failure
+	\item Satisfy use cases - e.g. tags to help with reflection and field abuse
+	\item Introduce changes in small chunks
+	\item Knowing a thing is bad isn't enough to get rid of it - like \code{ANY\_MAP}
+\end{itemize}
+\end{frame}
+
+{\1
+\begin{frame}[plain,noframenumbering]
+	\finalpage{Thank you for listening}
+\end{frame}}
+
+\end{document}
